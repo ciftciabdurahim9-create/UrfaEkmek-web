@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Kurye Başvurusu - UrfaEkmek</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>🛵 Kurye olarak bize katıl</p>
+
+</header>
+
+
+<main>
+
+    <section class="form-container">
+
+        <h2>🛵 Kurye Başvuru Formu</h2>
+
+
+        {% if mesaj %}
+
+            <div class="success">
+                {{ mesaj }}
+            </div>
+
+        {% endif %}
+
+
+        <form method="POST"
+              action="/kurye">
+
+
+            <label for="ad_soyad">
+                👤 Ad Soyad
+            </label>
+
+            <input
+                id="ad_soyad"
+                type="text"
+                name="ad_soyad"
+                placeholder="Ad Soyad"
+                required
+            >
+
+
+            <label for="telefon">
+                📞 Telefon
+            </label>
+
+            <input
+                id="telefon"
+                type="tel"
+                name="telefon"
+                placeholder="05XX XXX XX XX"
+                required
+            >
+
+
+            <label for="yas">
+                🎂 Yaş
+            </label>
+
+            <input
+                id="yas"
+                type="number"
+                name="yas"
+                placeholder="18"
+                min="18"
+                required
+            >
+
+
+            <label for="ilce">
+                📍 Çalışmak İstediğin İlçe
+            </label>
+
+            <select id="ilce"
+                    name="ilce"
+                    required>
+
+                <option value="">
+                    İlçe seçin
+                </option>
+
+                <option value="Haliliye">
+                    Haliliye
+                </option>
+
+                <option value="Karaköprü">
+                    Karaköprü
+                </option>
+
+                <option value="Eyyübiye">
+                    Eyyübiye
+                </option>
+
+                <option value="Birecik">
+                    Birecik
+                </option>
+
+                <option value="Siverek">
+                    Siverek
+                </option>
+
+                <option value="Viranşehir">
+                    Viranşehir
+                </option>
+
+                <option value="Suruç">
+                    Suruç
+                </option>
+
+            </select>
+
+
+            <label for="arac">
+                🛵 Kullanacağın Araç
+            </label>
+
+            <select id="arac"
+                    name="arac"
+                    required>
+
+                <option value="">
+                    Araç seçin
+                </option>
+
+                <option value="Motosiklet">
+                    🛵 Motosiklet
+                </option>
+
+                <option value="Bisiklet">
+                    🚲 Bisiklet
+                </option>
+
+                <option value="Araba">
+                    🚗 Araba
+                </option>
+
+            </select>
+
+
+            <h3 style="margin-top:30px;">
+                🔐 Kurye Hesabı
+            </h3>
+
+
+            <label for="kullanici_adi">
+                👤 Kullanıcı Adı
+            </label>
+
+            <input
+                id="kullanici_adi"
+                type="text"
+                name="kullanici_adi"
+                placeholder="Örn: ali123"
+                required
+            >
+
+
+            <label for="sifre">
+                🔑 Şifre
+            </label>
+
+            <input
+                id="sifre"
+                type="password"
+                name="sifre"
+                placeholder="Şifreniz"
+                minlength="6"
+                required
+            >
+
+
+            <button type="submit">
+
+                🛵 Kurye Başvurusu Gönder
+
+            </button>
+
+        </form>
+
+
+        <div style="text-align:center; margin-top:25px;">
+
+            <a href="/kurye-giris">
+                🔐 Kurye Girişi
+            </a>
+
+        </div>
+
+
+        <br>
+
+
+        <a href="/">
+            ← Ana Sayfaya Dön
+        </a>
+
+    </section>
+
+</main>
+
+</body>
+
+</html>

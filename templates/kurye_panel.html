@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Kurye Paneli - UrfaEkmek</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>🛵 Hoş geldin, {{ kurye_adi }}</p>
+
+</header>
+
+
+<main>
+
+
+    <!-- BEKLEYEN SİPARİŞLER -->
+
+    <section class="form-container">
+
+        <h2>📦 Bekleyen Siparişler</h2>
+
+
+        {% if bekleyen_siparisler %}
+
+
+            {% for siparis in bekleyen_siparisler %}
+
+                <div class="card"
+                     style="width:100%; margin-bottom:20px;">
+
+                    <h2>
+                        📦 Sipariş #{{ siparis["id"] }}
+                    </h2>
+
+
+                    <p>
+                        👤
+                        <strong>
+                            {{ siparis["ad_soyad"] }}
+                        </strong>
+                    </p>
+
+
+                    <p>
+                        📞 {{ siparis["telefon"] }}
+                    </p>
+
+
+                    <p>
+                        📍 {{ siparis["adres"] }}
+                    </p>
+
+
+                    <p>
+                        🥖 {{ siparis["urunler"] }}
+                    </p>
+
+
+                    <p>
+                        💰
+                        <strong>
+                            {{ siparis["genel_toplam"] }} TL
+                        </strong>
+                    </p>
+
+
+                    <p>
+                        🟡 Durum:
+                        {{ siparis["durum"] }}
+                    </p>
+
+
+                    <form
+                        method="POST"
+                        action="/kurye/siparis-al/{{ siparis['id'] }}"
+                    >
+
+                        <button type="submit">
+
+                            📦 Siparişi Üstlen
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p style="text-align:center;">
+
+                🎉 Şu anda bekleyen sipariş yok.
+
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- BENİM SİPARİŞLERİM -->
+
+    <section class="form-container">
+
+        <h2>🛵 Aldığım Siparişler</h2>
+
+
+        {% if benim_siparislerim %}
+
+
+            {% for siparis in benim_siparislerim %}
+
+                <div class="card"
+                     style="width:100%; margin-bottom:20px;">
+
+                    <h2>
+                        📦 Sipariş #{{ siparis["id"] }}
+                    </h2>
+
+
+                    <p>
+                        👤
+                        {{ siparis["ad_soyad"] }}
+                    </p>
+
+
+                    <p>
+                        📞
+                        {{ siparis["telefon"] }}
+                    </p>
+
+
+                    <p>
+                        📍
+                        {{ siparis["adres"] }}
+                    </p>
+
+
+                    <p>
+                        🥖
+                        {{ siparis["urunler"] }}
+                    </p>
+
+
+                    <h3>
+                        💰
+                        {{ siparis["genel_toplam"] }} TL
+                    </h3>
+
+
+                    <p>
+
+                        📌 Durum:
+                        <strong>
+                            {{ siparis["durum"] }}
+                        </strong>
+
+                    </p>
+
+
+                    {% if siparis["durum"] == "Kurye Aldı" %}
+
+                        <form
+                            method="POST"
+                            action="/kurye/siparis-durum/{{ siparis['id'] }}/Hazırlanıyor"
+                        >
+
+                            <button type="submit">
+                                🍞 Hazırlanıyor
+                            </button>
+
+                        </form>
+
+                    {% elif siparis["durum"] == "Hazırlanıyor" %}
+
+                        <form
+                            method="POST"
+                            action="/kurye/siparis-durum/{{ siparis['id'] }}/Yolda"
+                        >
+
+                            <button type="submit">
+                                🛵 Yola Çıktı
+                            </button>
+
+                        </form>
+
+                    {% elif siparis["durum"] == "Yolda" %}
+
+                        <form
+                            method="POST"
+                            action="/kurye/siparis-durum/{{ siparis['id'] }}/Teslim Edildi"
+                        >
+
+                            <button type="submit">
+                                ✅ Teslim Edildi
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p style="text-align:center;">
+
+                Henüz üstlendiğiniz sipariş yok.
+
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <div style="text-align:center; margin:30px;">
+
+        <a href="/kurye-cikis">
+
+            <button>
+                🚪 Kurye Çıkışı
+            </button>
+
+        </a>
+
+    </div>
+
+
+</main>
+
+</body>
+
+</html>

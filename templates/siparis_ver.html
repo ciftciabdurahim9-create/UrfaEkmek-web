@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="tr"><head>
+    <meta charset="UTF-8"><meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Sipariş Ver - UrfaEkmek</title>
+
+<link rel="stylesheet"
+      href="/static/style.css">
+
+</head><body><header><h1>🥖 UrfaEkmek</h1>
+
+<p>📦 Sipariş Bilgileri</p>
+
+</header><main><section class="form-container">
+
+    <h2>📦 Siparişi Tamamla</h2>
+
+    {% if hata %}
+
+        <div class="success">
+            {{ hata }}
+        </div>
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        <label for="ad_soyad">
+            👤 Ad Soyad
+        </label>
+
+        <input
+            id="ad_soyad"
+            type="text"
+            name="ad_soyad"
+            placeholder="Ad Soyad"
+            required
+        >
+
+
+        <label for="telefon">
+            📞 Telefon
+        </label>
+
+        <input
+            id="telefon"
+            type="tel"
+            name="telefon"
+            placeholder="05XX XXX XX XX"
+            required
+        >
+
+
+        <label for="adres">
+            📍 Teslimat Adresi
+        </label>
+
+        <textarea
+            id="adres"
+            name="adres"
+            placeholder="Ekmeklerin teslim edileceği açık adres"
+            required
+        ></textarea>
+
+
+        <h3 style="margin-top:30px;">
+            💰 Ödeme Özeti
+        </h3>
+
+        <p>
+            🥖 Ürünler:
+            <strong>{{ toplam }} TL</strong>
+        </p>
+
+        <p>
+            🛵 Kurye:
+            <strong>{{ kurye_ucreti }} TL</strong>
+        </p>
+
+        <h2>
+            💰 Genel Toplam:
+            {{ genel_toplam }} TL
+        </h2>
+
+
+        <button type="submit">
+
+            📦 Siparişi Tamamla
+
+        </button>
+
+    </form>
+
+
+    <div style="text-align:center; margin-top:25px;">
+
+        <a href="/sepet">
+            ← Sepete Dön
+        </a>
+
+    </div>
+
+</section>
+
+</main></body></html>

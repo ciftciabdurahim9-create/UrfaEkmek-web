@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>UrfaEkmek Yönetim Paneli</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<header>
+
+    <h1>🔐 UrfaEkmek</h1>
+
+    <p>Yönetim Paneli</p>
+
+</header>
+
+
+<main>
+
+
+    <!-- FIRIN BAŞVURULARI -->
+
+    <section class="form-container">
+
+        <h2>🏪 Fırın Başvuruları</h2>
+
+
+        {% if basvurular %}
+
+
+            {% for basvuru in basvurular %}
+
+                <div class="card">
+
+                    <h2>
+                        🥖 {{ basvuru["firin_adi"] }}
+                    </h2>
+
+
+                    <p>
+                        <strong>Yetkili:</strong>
+                        {{ basvuru["yetkili"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Telefon:</strong>
+                        {{ basvuru["telefon"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Adres:</strong>
+                        {{ basvuru["adres"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Çalışma Saatleri:</strong>
+                        {{ basvuru["saatler"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Teslimat Bölgeleri:</strong>
+                        {{ basvuru["bolgeler"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Durum:</strong>
+                        {{ basvuru["durum"] }}
+                    </p>
+
+
+                    <!-- BEKLEYEN FIRIN -->
+
+                    {% if basvuru["durum"] == "Bekliyor" %}
+
+                        <a href="/admin/durum/{{ basvuru['id'] }}/Onaylandı">
+
+                            <button>
+                                ✅ Onayla
+                            </button>
+
+                        </a>
+
+
+                        <a href="/admin/durum/{{ basvuru['id'] }}/Reddedildi">
+
+                            <button>
+                                ❌ Reddet
+                            </button>
+
+                        </a>
+
+                    {% endif %}
+
+
+                    <!-- ONAYLI FIRIN -->
+
+                    {% if basvuru["durum"] == "Onaylandı" %}
+
+                        <div style="margin-top:15px;">
+
+                            <strong>
+                                🟢 Bu fırın şu anda yayında.
+                            </strong>
+
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="/admin/firin-kaldir/{{ basvuru['id'] }}"
+                            style="margin-top:15px;"
+                        >
+
+                            <button type="submit">
+
+                                🗑️ Fırını Kaldır
+
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+
+                    <!-- REDDEDİLEN FIRIN -->
+
+                    {% if basvuru["durum"] == "Reddedildi" %}
+
+                        <div style="margin-top:15px;">
+
+                            🔴 Bu fırın yayında değil.
+
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <br>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p>
+                Henüz fırın başvurusu bulunmuyor.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- KURYE BAŞVURULARI -->
+
+    <section class="form-container">
+
+        <h2>🛵 Kurye Başvuruları</h2>
+
+
+        {% if kuryeler %}
+
+
+            {% for kurye in kuryeler %}
+
+                <div class="card">
+
+                    <h2>
+                        🛵 {{ kurye["ad_soyad"] }}
+                    </h2>
+
+
+                    <p>
+                        <strong>Telefon:</strong>
+                        {{ kurye["telefon"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Yaş:</strong>
+                        {{ kurye["yas"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Çalışmak İstediği İlçe:</strong>
+                        {{ kurye["ilce"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Araç:</strong>
+                        {{ kurye["arac"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Kullanıcı Adı:</strong>
+                        {{ kurye["kullanici_adi"] }}
+                    </p>
+
+
+                    <p>
+                        <strong>Durum:</strong>
+                        {{ kurye["durum"] }}
+                    </p>
+
+
+                    {% if kurye["durum"] == "Bekliyor" %}
+
+                        <a href="/admin/kurye/{{ kurye['id'] }}/Onaylandı">
+
+                            <button>
+                                ✅ Onayla
+                            </button>
+
+                        </a>
+
+
+                        <a href="/admin/kurye/{{ kurye['id'] }}/Reddedildi">
+
+                            <button>
+                                ❌ Reddet
+                            </button>
+
+                        </a>
+
+                    {% endif %}
+
+
+                    {% if kurye["durum"] == "Onaylandı" %}
+
+                        <p>
+                            🟢 Kurye hesabı aktif.
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if kurye["durum"] == "Reddedildi" %}
+
+                        <p>
+                            🔴 Kurye hesabı aktif değil.
+                        </p>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <br>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p>
+                Henüz kurye başvurusu bulunmuyor.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- SİPARİŞLER -->
+
+    <section class="form-container">
+
+        <h2>📦 Siparişler</h2>
+
+
+        {% if siparisler %}
+
+
+            {% for siparis in siparisler %}
+
+                <div class="card">
+
+                    <h2>
+                        📦 Sipariş #{{ siparis["id"] }}
+                    </h2>
+
+
+                    <p>
+                        👤
+                        <strong>
+                            {{ siparis["ad_soyad"] }}
+                        </strong>
+                    </p>
+
+
+                    <p>
+                        📞 {{ siparis["telefon"] }}
+                    </p>
+
+
+                    <p>
+                        📍 {{ siparis["adres"] }}
+                    </p>
+
+
+                    <p>
+                        🥖 {{ siparis["urunler"] }}
+                    </p>
+
+
+                    <p>
+                        💰 Ürünler:
+                        {{ siparis["urun_toplami"] }} TL
+                    </p>
+
+
+                    <p>
+                        🛵 Kurye:
+                        {{ siparis["kurye_ucreti"] }} TL
+                    </p>
+
+
+                    <h3>
+                        💰 Toplam:
+                        {{ siparis["genel_toplam"] }} TL
+                    </h3>
+
+
+                    <p>
+                        📌 Durum:
+                        <strong>
+                            {{ siparis["durum"] }}
+                        </strong>
+                    </p>
+
+
+                    {% if siparis["kurye_id"] %}
+
+                        <p>
+                            🛵 Kurye ID:
+                            {{ siparis["kurye_id"] }}
+                        </p>
+
+                    {% else %}
+
+                        <p>
+                            🟡 Henüz kurye alınmadı.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                <br>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p>
+                Henüz sipariş bulunmuyor.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- ÇIKIŞ -->
+
+    <div style="text-align:center; margin:30px;">
+
+        <a href="/admin/cikis">
+
+            <button>
+                🚪 Admin Çıkışı
+            </button>
+
+        </a>
+
+    </div>
+
+
+</main>
+
+</body>
+
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>{{ firin["firin_adi"] }} - UrfaEkmek</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>
+        {{ firin["firin_adi"] }}
+    </p>
+
+</header>
+
+
+<main>
+
+    <section class="form-container">
+
+        <h2>
+            🏪 {{ firin["firin_adi"] }}
+        </h2>
+
+        <p>
+            📍 {{ firin["adres"] }}
+        </p>
+
+        <p>
+            🕐 {{ firin["saatler"] }}
+        </p>
+
+        <p>
+            🚚 Teslimat: {{ firin["bolgeler"] }}
+        </p>
+
+    </section>
+
+
+    <section>
+
+        <h2 style="text-align:center;">
+            🥖 Ürünler
+        </h2>
+
+
+        <div class="cards">
+
+            {% for urun in urunler %}
+
+                <div class="card">
+
+                    <h2>
+                        {{ urun["emoji"] }}
+                        {{ urun["ad"] }}
+                    </h2>
+
+                    <h3>
+                        {{ urun["fiyat"] }} TL
+                    </h3>
+
+                    <form method="POST"
+                          action="/sepete-ekle/{{ urun['id'] }}">
+
+                        <button type="submit">
+                            🛒 Sepete Ekle
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <section style="text-align:center; margin:30px;">
+
+        <a href="/sepet">
+
+            <button>
+                🛒 Sepeti Gör
+            </button>
+
+        </a>
+
+    </section>
+
+
+    <div style="text-align:center; margin:30px;">
+
+        <a href="/">
+            ← Fırınlara Dön
+        </a>
+
+    </div>
+
+</main>
+
+</body>

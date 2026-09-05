@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Fırıncı Başvurusu - UrfaEkmek</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>🏪 Fırınını sisteme ekle</p>
+
+</header>
+
+
+<main>
+
+    <section class="form-container">
+
+        <h2>🏪 Fırıncı Başvurusu</h2>
+
+
+        {% if mesaj %}
+
+            <div class="success">
+                {{ mesaj }}
+            </div>
+
+        {% endif %}
+
+
+        <form method="POST">
+
+
+            <label for="firin_adi">
+                🏪 Fırın Adı
+            </label>
+
+            <input
+                id="firin_adi"
+                type="text"
+                name="firin_adi"
+                placeholder="Örn: Öz Urfa Ekmek"
+                required
+            >
+
+
+            <label for="yetkili">
+                👤 Yetkili Adı
+            </label>
+
+            <input
+                id="yetkili"
+                type="text"
+                name="yetkili"
+                placeholder="Ad Soyad"
+                required
+            >
+
+
+            <label for="telefon">
+                📞 Telefon
+            </label>
+
+            <input
+                id="telefon"
+                type="tel"
+                name="telefon"
+                placeholder="05XX XXX XX XX"
+                required
+            >
+
+
+            <label for="adres">
+                📍 Fırın Adresi
+            </label>
+
+            <textarea
+                id="adres"
+                name="adres"
+                placeholder="Fırının açık adresi"
+                required
+            ></textarea>
+
+
+            <label for="saatler">
+                🕐 Çalışma Saatleri
+            </label>
+
+            <input
+                id="saatler"
+                type="text"
+                name="saatler"
+                placeholder="06:00 - 23:00"
+                required
+            >
+
+
+            <label for="bolgeler">
+                🚚 Teslimat Bölgeleri
+            </label>
+
+            <textarea
+                id="bolgeler"
+                name="bolgeler"
+                placeholder="Haliliye, Karaköprü..."
+                required
+            ></textarea>
+
+
+            <h3 style="margin-top:30px;">
+                🔐 Fırın Hesabı
+            </h3>
+
+
+            <label for="kullanici_adi">
+                👤 Kullanıcı Adı
+            </label>
+
+            <input
+                id="kullanici_adi"
+                type="text"
+                name="kullanici_adi"
+                placeholder="Örn: ozurfa"
+                required
+            >
+
+
+            <label for="sifre">
+                🔑 Şifre
+            </label>
+
+            <input
+                id="sifre"
+                type="password"
+                name="sifre"
+                placeholder="En az 6 karakter"
+                minlength="6"
+                required
+            >
+
+
+            <button type="submit">
+
+                🥖 Başvuruyu Gönder
+
+            </button>
+
+        </form>
+
+
+        <div style="text-align:center; margin-top:25px;">
+
+            <a href="/firinci-giris">
+                🔐 Fırıncı Girişi
+            </a>
+
+        </div>
+
+
+        <br>
+
+
+        <a href="/">
+            ← Ana Sayfaya Dön
+        </a>
+
+    </section>
+
+</main>
+
+</body>
+
+</html>

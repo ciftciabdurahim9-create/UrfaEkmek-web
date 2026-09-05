@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>UrfaEkmek - Şanlıurfa Ekmek Siparişi</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>
+        Şanlıurfa'da sıcak ekmek kapında!
+    </p>
+
+</header>
+
+
+<main>
+
+    <section class="hero">
+
+        <h2>
+            Ekmeğini kolayca sipariş et
+        </h2>
+
+        <p>
+            Şanlıurfa'daki fırınları keşfet,
+            ekmeğini kapına kadar getir.
+        </p>
+
+    </section>
+
+
+    <section>
+
+        <h2 style="text-align:center;">
+            🏪 Onaylı Fırınlar
+        </h2>
+
+
+        {% if firinlar %}
+
+            <div class="cards">
+
+                {% for firin in firinlar %}
+
+                    <div class="card">
+
+                        <h2>
+                            🥖 {{ firin["firin_adi"] }}
+                        </h2>
+
+                        <p>
+                            📍 {{ firin["adres"] }}
+                        </p>
+
+                        <p>
+                            🕐 {{ firin["saatler"] }}
+                        </p>
+
+                        <p>
+                            🚚 {{ firin["bolgeler"] }}
+                        </p>
+
+                        <p>
+                            🟢 <strong>Onaylı Fırın</strong>
+                        </p>
+
+
+                        <a href="/firin/{{ firin['id'] }}">
+
+                            <button>
+                                🥖 Ekmek Sipariş Ver
+                            </button>
+
+                        </a>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p style="text-align:center;">
+                Şu anda onaylanmış fırın bulunmuyor.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="cards">
+
+        <div class="card">
+
+            <h2>
+                🏪 Fırıncı mısın?
+            </h2>
+
+            <p>
+                Fırınını UrfaEkmek'e ekle
+                ve daha fazla müşteriye ulaş.
+            </p>
+
+            <a href="/firinci">
+
+                <button>
+                    Fırıncı Başvurusu
+                </button>
+
+            </a>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>
+                🛵 Kurye Ol
+            </h2>
+
+            <p>
+                Kurye olarak sisteme kat
+                ve siparişleri müşterilere ulaştır.
+            </p>
+
+            <a href="/kurye">
+
+                <button>
+                    Kurye Başvurusu
+                </button>
+
+            </a>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    <p>
+        © 2026 UrfaEkmek
+    </p>
+
+    <p>
+        Şanlıurfa'nın yerel ekmek teslimat platformu
+    </p>
+
+</footer>
+
+</body>
+
+</html>

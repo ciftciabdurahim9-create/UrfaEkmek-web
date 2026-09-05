@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Fırıncı Paneli - UrfaEkmek</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🥖 UrfaEkmek</h1>
+
+    <p>
+        🏪 Hoş geldin,
+        {{ firin["firin_adi"] }}
+    </p>
+
+</header>
+
+
+<main>
+
+    <section class="form-container">
+
+        <h2>🏪 Fırın Paneli</h2>
+
+
+        <div class="card"
+             style="width:100%;">
+
+            <h2>
+                🥖 {{ firin["firin_adi"] }}
+            </h2>
+
+
+            <p>
+                👤 Yetkili:
+                {{ firin["yetkili"] }}
+            </p>
+
+
+            <p>
+                📞 Telefon:
+                {{ firin["telefon"] }}
+            </p>
+
+
+            <p>
+                📍 Adres:
+                {{ firin["adres"] }}
+            </p>
+
+
+            <p>
+                🕐 Çalışma Saatleri:
+                {{ firin["saatler"] }}
+            </p>
+
+
+            <p>
+                🚚 Teslimat Bölgeleri:
+                {{ firin["bolgeler"] }}
+            </p>
+
+
+            <p>
+                🟢 Durum:
+                {{ firin["durum"] }}
+            </p>
+
+        </div>
+
+
+        <h2 style="margin-top:35px;">
+            📦 Siparişler
+        </h2>
+
+
+        <div class="card"
+             style="width:100%;">
+
+            <h3>
+                🚧 Sipariş sistemi hazırlanıyor
+            </h3>
+
+            <p>
+                Yakında müşterilerden gelen
+                siparişleri burada görebileceksiniz.
+            </p>
+
+        </div>
+
+
+        <div style="text-align:center; margin-top:30px;">
+
+            <a href="/firinci-cikis">
+
+                <button>
+                    🚪 Çıkış Yap
+                </button>
+
+            </a>
+
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+
+</html>
