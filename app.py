@@ -239,7 +239,7 @@ def sepete_ekle(firin_id, urun_id):
 
     return redirect("/firin/" + str(firin_id))
 @app.route("/sepet")
-def sepet():
+def sepet():    
 
     sepet = session.get("sepet", {})
 
