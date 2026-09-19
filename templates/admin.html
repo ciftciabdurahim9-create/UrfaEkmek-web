@@ -31,10 +31,10 @@
         <h2>🏪 Fırın Başvuruları</h2>
 
 
-        {% if basvurular %}
+        {% if firin_basvurulari %}
 
 
-            {% for basvuru in basvurular %}
+            {% for basvuru in firin_basvurulari %}
 
                 <div class="card">
 
@@ -83,7 +83,7 @@
 
                     {% if basvuru["durum"] == "Bekliyor" %}
 
-                        <a href="/admin/durum/{{ basvuru['id'] }}/Onaylandı">
+                        <a href="/admin/firin-onayla/{{ basvuru['id'] }}">
 
                             <button>
                                 ✅ Onayla
@@ -92,7 +92,7 @@
                         </a>
 
 
-                        <a href="/admin/durum/{{ basvuru['id'] }}/Reddedildi">
+                        <a href="/admin/firin-reddet/{{ basvuru['id'] }}">
 
                             <button>
                                 ❌ Reddet
@@ -223,7 +223,7 @@
 
                     {% if kurye["durum"] == "Bekliyor" %}
 
-                        <a href="/admin/kurye/{{ kurye['id'] }}/Onaylandı">
+                        <a href="/admin/kurye-onayla/{{ kurye['id'] }}">
 
                             <button>
                                 ✅ Onayla
@@ -232,7 +232,7 @@
                         </a>
 
 
-                        <a href="/admin/kurye/{{ kurye['id'] }}/Reddedildi">
+                        <a href="/admin/kurye-reddet/{{ kurye['id'] }}">
 
                             <button>
                                 ❌ Reddet
@@ -388,7 +388,7 @@
 
     <div style="text-align:center; margin:30px;">
 
-        <a href="/admin/cikis">
+        <a href="/admin-cikis">
 
             <button>
                 🚪 Admin Çıkışı
