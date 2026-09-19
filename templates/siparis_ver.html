@@ -1,99 +1,130 @@
-<!DOCTYPE html><html lang="tr"><head>
-    <meta charset="UTF-8"><meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="tr">
 
-<title>Sipariş Ver - UrfaEkmek</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet"
-      href="/static/style.css">
+    <title>Sipariş Ver - UrfaEkmek</title>
 
-</head><body><header><h1>🥖 UrfaEkmek</h1>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
 
-<p>📦 Sipariş Bilgileri</p>
+<body>
 
-</header><main><section class="form-container">
+<header>
+    <h1>🥖 UrfaEkmek</h1>
+    <p>📦 Sipariş Bilgileri</p>
+</header>
 
-    <h2>📦 Siparişi Tamamla</h2>
+<main>
 
     {% if hata %}
 
-        <div class="success">
-            {{ hata }}
+        <div class="form-container"
+             style="text-align:center; color:red;">
+
+            <h3>⚠️ {{ hata }}</h3>
+
         </div>
 
     {% endif %}
 
 
-    <form method="POST">
+    {% if firin %}
 
-        <label for="ad_soyad">
-            👤 Ad Soyad
-        </label>
+        <section class="form-container">
 
-        <input
-            id="ad_soyad"
-            type="text"
-            name="ad_soyad"
-            placeholder="Ad Soyad"
-            required
-        >
+            <h2>🏪 {{ firin["firin_adi"] }}</h2>
 
+            <p>
+                📍 {{ firin["adres"] }}
+            </p>
 
-        <label for="telefon">
-            📞 Telefon
-        </label>
+            <p>
+                🕐 Çalışma Saatleri:
+                {{ firin["saatler"] }}
+            </p>
 
-        <input
-            id="telefon"
-            type="tel"
-            name="telefon"
-            placeholder="05XX XXX XX XX"
-            required
-        >
+        </section>
+
+    {% endif %}
 
 
-        <label for="adres">
-            📍 Teslimat Adresi
-        </label>
+    <section class="form-container">
 
-        <textarea
-            id="adres"
-            name="adres"
-            placeholder="Ekmeklerin teslim edileceği açık adres"
-            required
-        ></textarea>
+        <h2>👤 Teslimat Bilgileri</h2>
 
+        <form method="POST">
 
-        <h3 style="margin-top:30px;">
-            💰 Ödeme Özeti
-        </h3>
+            <label>
+                Ad Soyad
+            </label>
 
-        <p>
-            🥖 Ürünler:
-            <strong>{{ toplam }} TL</strong>
-        </p>
-
-        <p>
-            🛵 Kurye:
-            <strong>{{ kurye_ucreti }} TL</strong>
-        </p>
-
-        <h2>
-            💰 Genel Toplam:
-            {{ genel_toplam }} TL
-        </h2>
+            <input
+                type="text"
+                name="ad_soyad"
+                placeholder="Adınız ve soyadınız"
+                required
+            >
 
 
-        <button type="submit">
+            <label>
+                Telefon
+            </label>
 
-            📦 Siparişi Tamamla
+            <input
+                type="tel"
+                name="telefon"
+                placeholder="05XXXXXXXXX"
+                required
+            >
 
-        </button>
 
-    </form>
+            <label>
+                Teslimat Adresi
+            </label>
+
+            <textarea
+                name="adres"
+                placeholder="Açık adresinizi yazın"
+                rows="5"
+                required
+            ></textarea>
 
 
-    <div style="text-align:center; margin-top:25px;">
+            <h3 style="margin-top:25px;">
+                💰 Sipariş Özeti
+            </h3>
+
+            <p>
+                🥖 Ürün Toplamı:
+                <strong>{{ toplam }} TL</strong>
+            </p>
+
+            <p>
+                🚚 Kurye Ücreti:
+                <strong>{{ kurye_ucreti }} TL</strong>
+            </p>
+
+            <hr>
+
+            <h2>
+                💵 Genel Toplam:
+                {{ genel_toplam }} TL
+            </h2>
+
+
+            <button type="submit">
+                ✅ Siparişi Onayla
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <div style="text-align:center; margin:30px;">
 
         <a href="/sepet">
             ← Sepete Dön
@@ -101,6 +132,7 @@
 
     </div>
 
-</section>
+</main>
 
-</main></body></html>
+</body>
+</html>
