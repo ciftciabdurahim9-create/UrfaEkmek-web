@@ -1470,10 +1470,7 @@ def firin_kaldir(firin_id):
 # ADMIN KURYE ONAYLA
 # ==================================================
 
-@app.route(
-    "/admin/kurye-onayla/<int:kurye_id>",
-    methods=["POST"]
-)
+@app.route("/admin/kurye-onayla/<int:kurye_id>")
 def kurye_onayla(kurye_id):
 
     if not session.get("admin"):
@@ -1485,16 +1482,12 @@ def kurye_onayla(kurye_id):
         UPDATE kurye_basvurulari
         SET durum = 'Onaylandı'
         WHERE id = ?
-    """, (
-        kurye_id,
-    ))
+    """, (kurye_id,))
 
     conn.commit()
     conn.close()
 
-    return redirect(
-        "/admin-panel"
-    )
+    return redirect("/admin-panel")
 
 
 # ==================================================
