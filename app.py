@@ -128,47 +128,36 @@ def firin_getir(firin_id):
 
 
 def firin_acik_mi(saatler):
-    try:
-        if not saatler:
-            return False
 
-        parcalar = saatler.split("-")
-
-        if len(parcalar) != 2:
-            return False
-
-        acilis = parcalar[0].strip()
-        kapanis = parcalar[1].strip()
-
-        acilis_saat = datetime.strptime(
-            acilis,
-            "%H:%M"
-        ).time()
-
-        kapanis_saat = datetime.strptime(
-            kapanis,
-            "%H:%M"
-        ).time()
-
-        simdi = datetime.now(
-            ZoneInfo("Europe/Istanbul")
-        ).time()
-
-        if acilis_saat < kapanis_saat:
-            return acilis_saat <= simdi <= kapanis_saat
-
-        elif acilis_saat > kapanis_saat:
-            return (
-                simdi >= acilis_saat
-                or simdi <= kapanis_saat
-            )
-
-        return True
-
-    except:
+    if not saatler:
         return False
 
+    try:
+        saatler = saatler.strip()
 
+        baslangic, bitis = saatler.split("-")
+
+        baslangic = baslangic.strip().replace(".", ":")
+        bitis = bitis.strip().replace(".", ":")
+
+        bas_saat, bas_dakika = map(int, baslangic.split(":"))
+        bit_saat, bit_dakika = map(int, bitis.split(":"))
+
+        simdi = datetime.now(ZoneInfo("Europe/Istanbul"))
+
+        mevcut_dakika = simdi.hour * 60 + simdi.minute
+        baslangic_dakika = bas_saat * 60 + bas_dakika
+        bitis_dakika = bit_saat * 60 + bit_dakika
+
+        # 00:00 - 23:59 gibi normal çalışma saatleri
+        if baslangic_dakika <= bitis_dakika:
+            return baslangic_dakika <= mevcut_dakika <= bitis_dakika
+
+        # Geceyi aşan saatler, örn. 22:00 - 06:00
+        return mevcut_dakika >= baslangic_dakika or mevcut_dakika <= bitis_dakika
+
+    except Exception:
+        return False
 # ==================================================
 # ANA SAYFA
 # ==================================================
