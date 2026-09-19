@@ -1414,15 +1414,8 @@ def admin_panel():
 # ==================================================
 # ADMIN FIRIN ONAYLA
 # ==================================================
-
-@app.route(
-    "/admin/firin-onayla/<int:firin_id>",
-    methods=["POST"]
-)
+@app.route("/admin/firin-onayla/<int:firin_id>")
 def firin_onayla(firin_id):
-
-    if not session.get("admin"):
-        return redirect("/admin")
 
     conn = veritabani_baglan()
 
@@ -1430,30 +1423,16 @@ def firin_onayla(firin_id):
         UPDATE firin_basvurulari
         SET durum = 'Onaylandı'
         WHERE id = ?
-    """, (
-        firin_id,
-    ))
+    """, (firin_id,))
 
     conn.commit()
     conn.close()
 
-    return redirect(
-        "/admin-panel"
-    )
+    return redirect("/admin-panel")
 
 
-# ==================================================
-# ADMIN FIRIN REDDET
-# ==================================================
-
-@app.route(
-    "/admin/firin-reddet/<int:firin_id>",
-    methods=["POST"]
-)
+@app.route("/admin/firin-reddet/<int:firin_id>")
 def firin_reddet(firin_id):
-
-    if not session.get("admin"):
-        return redirect("/admin")
 
     conn = veritabani_baglan()
 
@@ -1461,17 +1440,12 @@ def firin_reddet(firin_id):
         UPDATE firin_basvurulari
         SET durum = 'Reddedildi'
         WHERE id = ?
-    """, (
-        firin_id,
-    ))
+    """, (firin_id,))
 
     conn.commit()
     conn.close()
 
-    return redirect(
-        "/admin-panel"
-    )
-
+    return redirect("/admin-panel")
 
 # ==================================================
 # ADMIN FIRIN KALDIR
