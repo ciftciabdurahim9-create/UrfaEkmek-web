@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, redirect, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
-
-DATABASE = "urfaekmek.db"
 
 app.secret_key = "urfaekmek-gizli-anahtar"
 
@@ -12,14 +12,15 @@ ADMIN_KULLANICI = "admin"
 ADMIN_SIFRE = "1234"
 
 
+def veritabani_baglan():
+    conn = sqlite3.connect("urfaekmek.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 def veritabani_olustur():
-
-    conn = sqlite3.connect(DATABASE)
+    conn = veritabani_baglan()
     cursor = conn.cursor()
-
-    # =========================
-    # FIRIN TABLOSU
-    # =========================
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS firin_basvurulari (
@@ -30,37 +31,11 @@ def veritabani_olustur():
             adres TEXT NOT NULL,
             saatler TEXT NOT NULL,
             bolgeler TEXT NOT NULL,
-            kullanici_adi TEXT UNIQUE,
-            sifre TEXT,
+            kullanici_adi TEXT NOT NULL,
+            sifre TEXT NOT NULL,
             durum TEXT DEFAULT 'Bekliyor'
         )
     """)
-
-    # Eski veritabanına yeni sütunları ekle
-
-    cursor.execute("PRAGMA table_info(firin_basvurulari)")
-
-    firin_sutunlari = [
-        sutun[1]
-        for sutun in cursor.fetchall()
-    ]
-
-    if "kullanici_adi" not in firin_sutunlari:
-        cursor.execute("""
-            ALTER TABLE firin_basvurulari
-            ADD COLUMN kullanici_adi TEXT
-        """)
-
-    if "sifre" not in firin_sutunlari:
-        cursor.execute("""
-            ALTER TABLE firin_basvurulari
-            ADD COLUMN sifre TEXT
-        """)
-
-
-    # =========================
-    # KURYE TABLOSU
-    # =========================
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS kurye_basvurulari (
@@ -70,35 +45,11 @@ def veritabani_olustur():
             yas TEXT NOT NULL,
             ilce TEXT NOT NULL,
             arac TEXT NOT NULL,
-            kullanici_adi TEXT UNIQUE,
-            sifre TEXT,
+            kullanici_adi TEXT NOT NULL,
+            sifre TEXT NOT NULL,
             durum TEXT DEFAULT 'Bekliyor'
         )
     """)
-
-    cursor.execute("PRAGMA table_info(kurye_basvurulari)")
-
-    kurye_sutunlari = [
-        sutun[1]
-        for sutun in cursor.fetchall()
-    ]
-
-    if "kullanici_adi" not in kurye_sutunlari:
-        cursor.execute("""
-            ALTER TABLE kurye_basvurulari
-            ADD COLUMN kullanici_adi TEXT
-        """)
-
-    if "sifre" not in kurye_sutunlari:
-        cursor.execute("""
-            ALTER TABLE kurye_basvurulari
-            ADD COLUMN sifre TEXT
-        """)
-
-
-    # =========================
-    # SİPARİŞ TABLOSU
-    # =========================
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS siparisler (
@@ -107,51 +58,109 @@ def veritabani_olustur():
             telefon TEXT NOT NULL,
             adres TEXT NOT NULL,
             urunler TEXT NOT NULL,
-            urun_toplami INTEGER NOT NULL,
-            kurye_ucreti INTEGER NOT NULL,
-            genel_toplam INTEGER NOT NULL,
+            urun_toplami REAL NOT NULL,
+            kurye_ucreti REAL NOT NULL,
+            genel_toplam REAL NOT NULL,
             durum TEXT DEFAULT 'Bekliyor',
-            kurye_id INTEGER
+            kurye_id INTEGER,
+            firin_id INTEGER
         )
     """)
 
+    # Eski veritabanlarında firin_id yoksa ekle
     cursor.execute("PRAGMA table_info(siparisler)")
+    sutunlar = [sutun["name"] for sutun in cursor.fetchall()]
 
-    siparis_sutunlari = [
-        sutun[1]
-        for sutun in cursor.fetchall()
-    ]
-
-    if "kurye_id" not in siparis_sutunlari:
+    if "firin_id" not in sutunlar:
         cursor.execute("""
             ALTER TABLE siparisler
-            ADD COLUMN kurye_id INTEGER
+            ADD COLUMN firin_id INTEGER
         """)
 
     conn.commit()
     conn.close()
 
 
-# ==================================================
-# ANA SAYFA
-# ==================================================
+veritabani_olustur()
+
+
+def urunleri_getir():
+    return [
+        {
+            "id": 1,
+            "ad": "Tırnaklı Ekmek",
+            "fiyat": 15,
+            "emoji": "🥖"
+        },
+        {
+            "id": 2,
+            "ad": "Lavaş",
+            "fiyat": 15,
+            "emoji": "🫓"
+        }
+    ]
+
+
+def firin_getir(firin_id):
+    conn = veritabani_baglan()
+
+    firin = conn.execute("""
+        SELECT *
+        FROM firin_basvurulari
+        WHERE id = ? AND durum = 'Onaylandı'
+    """, (firin_id,)).fetchone()
+
+    conn.close()
+
+    return firin
+
+
+def firin_acik_mi(saatler):
+    try:
+        if not saatler:
+            return False
+
+        parcalar = saatler.split("-")
+
+        if len(parcalar) != 2:
+            return False
+
+        acilis = parcalar[0].strip()
+        kapanis = parcalar[1].strip()
+
+        acilis_saat = datetime.strptime(acilis, "%H:%M").time()
+        kapanis_saat = datetime.strptime(kapanis, "%H:%M").time()
+
+        simdi = datetime.now(
+            ZoneInfo("Europe/Istanbul")
+        ).time()
+
+        # Örneğin 06:00 - 23:00
+        if acilis_saat < kapanis_saat:
+            return acilis_saat <= simdi <= kapanis_saat
+
+        # Geceye taşan saatler
+        # Örneğin 18:00 - 04:00
+        elif acilis_saat > kapanis_saat:
+            return simdi >= acilis_saat or simdi <= kapanis_saat
+
+        # Açılış ve kapanış aynıysa 24 saat açık kabul ediyoruz
+        return True
+
+    except:
+        return False
+
 
 @app.route("/")
-def ana_sayfa():
+def index():
+    conn = veritabani_baglan()
 
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    firinlar = conn.execute("""
         SELECT *
         FROM firin_basvurulari
         WHERE durum = 'Onaylandı'
         ORDER BY id DESC
-    """)
-
-    firinlar = cursor.fetchall()
+    """).fetchall()
 
     conn.close()
 
@@ -161,78 +170,145 @@ def ana_sayfa():
     )
 
 
-# ==================================================
-# FIRIN SAYFASI
-# ==================================================
+@app.route("/firin/<int:firin_id>")
+def firin(firin_id):
+    firin = firin_getir(firin_id)
 
-@app.route("/firin/<int:id>")
-def firin(id):
+    if not firin:
+        return "Fırın bulunamadı veya onaylanmamış.", 404
 
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    urunler = urunleri_getir()
 
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT *
-        FROM firin_basvurulari
-        WHERE id = ?
-        AND durum = 'Onaylandı'
-    """, (id,))
-
-    firin_bilgisi = cursor.fetchone()
-
-    conn.close()
-
-    if not firin_bilgisi:
-        return "Fırın bulunamadı."
-
-    urunler = [
-        {
-            "id": 1,
-            "ad": "Tırnaklı Ekmek",
-            "fiyat": 15,
-            "emoji": "🥖"
-        },
-        {
-            "id": 2,
-            "ad": "Lavaş",
-            "fiyat": 15,
-            "emoji": "🫓"
-        }
-    ]
+    acik = firin_acik_mi(firin["saatler"])
 
     return render_template(
         "firin.html",
-        firin=firin_bilgisi,
-        urunler=urunler
+        firin=firin,
+        urunler=urunler,
+        firin_acik=acik
     )
 
 
-# ==================================================
-# SEPETE EKLE
-# ==================================================
+@app.route("/sepete-ekle/<int:firin_id>/<int:urun_id>", methods=["POST"])
+def sepete_ekle(firin_id, urun_id):
 
-@app.route("/sepete-ekle/<int:urun_id>", methods=["POST"])
-def sepete_ekle(urun_id):
+    firin = firin_getir(firin_id)
 
-    urunler = {
-        1: {
-            "id": 1,
-            "ad": "Tırnaklı Ekmek",
-            "fiyat": 15,
-            "emoji": "🥖"
-        },
-        2: {
-            "id": 2,
-            "ad": "Lavaş",
-            "fiyat": 15,
-            "emoji": "🫓"
-        }
-    }
+    if not firin:
+        return "Fırın bulunamadı.", 404
 
-    if urun_id not in urunler:
-        return "Ürün bulunamadı."
+    # Fırın kapalıysa ürün eklenmesin
+    if not firin_acik_mi(firin["saatler"]):
+        session["sepet_mesaj"] = "Bu fırın şu anda kapalı."
+        return redirect("/firin/" + str(firin_id))
+
+    urunler = urunleri_getir()
+
+    urun = next(
+        (u for u in urunler if u["id"] == urun_id),
+        None
+    )
+
+    if not urun:
+        return "Ürün bulunamadı.", 404
+
+    # Sepette başka fırının ürünü varsa izin verme
+    mevcut_firin_id = session.get("sepet_firin_id")
+
+    if mevcut_firin_id is not None:
+        if int(mevcut_firin_id) != int(firin_id):
+            session["sepet_mesaj"] = (
+                "Sepetinizde başka bir fırından ürün var. "
+                "Önce sepeti temizleyin."
+            )
+            return redirect("/sepet")
+
+    session["sepet_firin_id"] = firin_id
+
+    sepet = session.get("sepet", {})
+
+    urun_id_str = str(urun_id)
+
+    if urun_id_str in sepet:
+        sepet[urun_id_str] += 1
+    else:
+        sepet[urun_id_str] = 1
+
+    session["sepet"] = sepet
+    session.modified = True
+
+    return redirect("/firin/" + str(firin_id))
+    @app.route("/sepet")
+def sepet():
+
+    sepet = session.get("sepet", {})
+
+    toplam = 0
+    sepet_urunleri = []
+
+    urunler = urunleri_getir()
+
+    for urun in urunler:
+        urun_id = str(urun["id"])
+
+        if urun_id in sepet:
+            adet = sepet[urun_id]
+
+            ara_toplam = urun["fiyat"] * adet
+
+            toplam += ara_toplam
+
+            sepet_urunleri.append({
+                "id": urun["id"],
+                "ad": urun["ad"],
+                "fiyat": urun["fiyat"],
+                "emoji": urun["emoji"],
+                "adet": adet,
+                "ara_toplam": ara_toplam
+            })
+
+    kurye_ucreti = 30 if sepet_urunleri else 0
+
+    genel_toplam = toplam + kurye_ucreti
+
+    firin = None
+
+    firin_id = session.get("sepet_firin_id")
+
+    if firin_id:
+        firin = firin_getir(firin_id)
+
+    mesaj = session.pop("sepet_mesaj", None)
+
+    return render_template(
+        "sepet.html",
+        sepet=sepet_urunleri,
+        toplam=toplam,
+        kurye_ucreti=kurye_ucreti,
+        genel_toplam=genel_toplam,
+        firin=firin,
+        mesaj=mesaj
+    )
+
+
+@app.route("/sepet/arttir/<int:urun_id>", methods=["POST"])
+def sepet_arttir(urun_id):
+
+    sepet = session.get("sepet", {})
+
+    urun_id_str = str(urun_id)
+
+    if urun_id_str in sepet:
+        sepet[urun_id_str] += 1
+
+    session["sepet"] = sepet
+    session.modified = True
+
+    return redirect("/sepet")
+
+
+@app.route("/sepet/azalt/<int:urun_id>", methods=["POST"])
+def sepet_azalt(urun_id):
 
     sepet = session.get("sepet", {})
 
@@ -240,125 +316,42 @@ def sepete_ekle(urun_id):
 
     if urun_id_str in sepet:
 
-        sepet[urun_id_str]["adet"] += 1
+        sepet[urun_id_str] -= 1
 
-    else:
-
-        urun = urunler[urun_id]
-
-        sepet[urun_id_str] = {
-            "ad": urun["ad"],
-            "fiyat": urun["fiyat"],
-            "emoji": urun["emoji"],
-            "adet": 1
-        }
+        if sepet[urun_id_str] <= 0:
+            del sepet[urun_id_str]
 
     session["sepet"] = sepet
+    session.modified = True
 
     return redirect("/sepet")
 
 
-# ==================================================
-# SEPET
-# ==================================================
-
-@app.route("/sepet")
-def sepet():
-
-    sepet = session.get("sepet", {})
-
-    toplam = 0
-
-    for urun in sepet.values():
-
-        toplam += (
-            urun["fiyat"]
-            * urun["adet"]
-        )
-
-    kurye_ucreti = 30 if sepet else 0
-
-    genel_toplam = toplam + kurye_ucreti
-
-    return render_template(
-        "sepet.html",
-        sepet=sepet,
-        toplam=toplam,
-        kurye_ucreti=kurye_ucreti,
-        genel_toplam=genel_toplam
-    )
-
-
-# ==================================================
-# SEPET ARTIR
-# ==================================================
-
-@app.route("/sepet/arttir/<urun_id>", methods=["POST"])
-def sepet_arttir(urun_id):
-
-    sepet = session.get("sepet", {})
-
-    if urun_id in sepet:
-        sepet[urun_id]["adet"] += 1
-
-    session["sepet"] = sepet
-
-    return redirect("/sepet")
-
-
-# ==================================================
-# SEPET AZALT
-# ==================================================
-
-@app.route("/sepet/azalt/<urun_id>", methods=["POST"])
-def sepet_azalt(urun_id):
-
-    sepet = session.get("sepet", {})
-
-    if urun_id in sepet:
-
-        sepet[urun_id]["adet"] -= 1
-
-        if sepet[urun_id]["adet"] <= 0:
-            del sepet[urun_id]
-
-    session["sepet"] = sepet
-
-    return redirect("/sepet")
-
-
-# ==================================================
-# SEPET SİL
-# ==================================================
-
-@app.route("/sepet/sil/<urun_id>", methods=["POST"])
+@app.route("/sepet/sil/<int:urun_id>", methods=["POST"])
 def sepet_sil(urun_id):
 
     sepet = session.get("sepet", {})
 
-    if urun_id in sepet:
-        del sepet[urun_id]
+    urun_id_str = str(urun_id)
+
+    if urun_id_str in sepet:
+        del sepet[urun_id_str]
 
     session["sepet"] = sepet
+    session.modified = True
 
     return redirect("/sepet")
 
-
-# ==================================================
-# SEPET TEMİZLE
-# ==================================================
 
 @app.route("/sepet/temizle", methods=["POST"])
 def sepet_temizle():
 
-    session["sepet"] = {}
+    session.pop("sepet", None)
+    session.pop("sepet_firin_id", None)
+    session.pop("sepet_mesaj", None)
 
     return redirect("/sepet")
 
-
-# ==================================================
-# SİPARİŞ VER
-# ==================================================
 
 @app.route("/siparis-ver", methods=["GET", "POST"])
 def siparis_ver():
@@ -368,155 +361,137 @@ def siparis_ver():
     if not sepet:
         return redirect("/sepet")
 
-    toplam = 0
+    firin_id = session.get("sepet_firin_id")
 
-    for urun in sepet.values():
+    if not firin_id:
+        return redirect("/sepet")
 
-        toplam += (
-            urun["fiyat"]
-            * urun["adet"]
-        )
+    firin = firin_getir(firin_id)
 
-    kurye_ucreti = 30
+    if not firin:
+        return "Fırın bulunamadı.", 404
 
-    genel_toplam = toplam + kurye_ucreti
+    hata = None
 
     if request.method == "POST":
 
-        ad_soyad = request.form.get(
-            "ad_soyad",
-            ""
-        ).strip()
-
-        telefon = request.form.get(
-            "telefon",
-            ""
-        ).strip()
-
-        adres = request.form.get(
-            "adres",
-            ""
-        ).strip()
+        ad_soyad = request.form.get("ad_soyad", "").strip()
+        telefon = request.form.get("telefon", "").strip()
+        adres = request.form.get("adres", "").strip()
 
         if not ad_soyad or not telefon or not adres:
+            hata = "Lütfen bütün alanları doldurun."
 
-            return render_template(
-                "siparis_ver.html",
-                hata="Lütfen bütün alanları doldurun.",
-                toplam=toplam,
-                kurye_ucreti=kurye_ucreti,
-                genel_toplam=genel_toplam
-            )
+        elif not firin_acik_mi(firin["saatler"]):
+            hata = "Bu fırın şu anda kapalı. Sipariş veremezsiniz."
 
-        urun_listesi = []
+        else:
 
-        for urun in sepet.values():
+            urunler = urunleri_getir()
 
-            urun_listesi.append(
-                f"{urun['emoji']} "
-                f"{urun['ad']} x "
-                f"{urun['adet']}"
-            )
+            toplam = 0
+            urun_listesi = []
 
-        urunler = ", ".join(urun_listesi)
+            for urun in urunler:
 
-        conn = sqlite3.connect(DATABASE)
+                urun_id_str = str(urun["id"])
 
-        cursor = conn.cursor()
+                if urun_id_str in sepet:
 
-        cursor.execute("""
-            INSERT INTO siparisler
-            (
+                    adet = sepet[urun_id_str]
+
+                    ara_toplam = urun["fiyat"] * adet
+
+                    toplam += ara_toplam
+
+                    urun_listesi.append(
+                        f"{urun['emoji']} {urun['ad']} x{adet}"
+                    )
+
+            kurye_ucreti = 30
+            genel_toplam = toplam + kurye_ucreti
+
+            urunler_yazi = ", ".join(urun_listesi)
+
+            conn = veritabani_baglan()
+
+            conn.execute("""
+                INSERT INTO siparisler
+                (
+                    ad_soyad,
+                    telefon,
+                    adres,
+                    urunler,
+                    urun_toplami,
+                    kurye_ucreti,
+                    genel_toplam,
+                    durum,
+                    kurye_id,
+                    firin_id
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
                 ad_soyad,
                 telefon,
                 adres,
-                urunler,
-                urun_toplami,
+                urunler_yazi,
+                toplam,
                 kurye_ucreti,
                 genel_toplam,
-                durum
+                "Bekliyor",
+                None,
+                firin_id
+            ))
+
+            conn.commit()
+            conn.close()
+
+            session.pop("sepet", None)
+            session.pop("sepet_firin_id", None)
+
+            return render_template(
+                "siparis_basarili.html",
+                ad_soyad=ad_soyad,
+                genel_toplam=genel_toplam
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            ad_soyad,
-            telefon,
-            adres,
-            urunler,
-            toplam,
-            kurye_ucreti,
-            genel_toplam,
-            "Bekliyor"
-        ))
 
-        conn.commit()
-        conn.close()
+    toplam = 0
 
-        session["sepet"] = {}
+    for urun in urunleri_getir():
 
-        return render_template(
-            "siparis_basarili.html",
-            genel_toplam=genel_toplam
-        )
+        urun_id_str = str(urun["id"])
+
+        if urun_id_str in sepet:
+            toplam += urun["fiyat"] * sepet[urun_id_str]
+
+    kurye_ucreti = 30
+    genel_toplam = toplam + kurye_ucreti
 
     return render_template(
         "siparis_ver.html",
-        hata="",
+        firin=firin,
         toplam=toplam,
         kurye_ucreti=kurye_ucreti,
-        genel_toplam=genel_toplam
+        genel_toplam=genel_toplam,
+        hata=hata
     )
 
-
-# ==================================================
-# FIRINCI BAŞVURUSU
-# ==================================================
 
 @app.route("/firinci", methods=["GET", "POST"])
 def firinci():
 
-    mesaj = ""
+    mesaj = None
 
     if request.method == "POST":
 
-        firin_adi = request.form.get(
-            "firin_adi",
-            ""
-        ).strip()
-
-        yetkili = request.form.get(
-            "yetkili",
-            ""
-        ).strip()
-
-        telefon = request.form.get(
-            "telefon",
-            ""
-        ).strip()
-
-        adres = request.form.get(
-            "adres",
-            ""
-        ).strip()
-
-        saatler = request.form.get(
-            "saatler",
-            ""
-        ).strip()
-
-        bolgeler = request.form.get(
-            "bolgeler",
-            ""
-        ).strip()
-
-        kullanici_adi = request.form.get(
-            "kullanici_adi",
-            ""
-        ).strip()
-
-        sifre = request.form.get(
-            "sifre",
-            ""
-        )
+        firin_adi = request.form.get("firin_adi", "").strip()
+        yetkili = request.form.get("yetkili", "").strip()
+        telefon = request.form.get("telefon", "").strip()
+        adres = request.form.get("adres", "").strip()
+        saatler = request.form.get("saatler", "").strip()
+        bolgeler = request.form.get("bolgeler", "").strip()
+        kullanici_adi = request.form.get("kullanici_adi", "").strip()
+        sifre = request.form.get("sifre", "").strip()
 
         if not all([
             firin_adi,
@@ -528,34 +503,40 @@ def firinci():
             kullanici_adi,
             sifre
         ]):
-
             mesaj = "Lütfen bütün alanları doldurun."
 
-            return render_template(
-                "firinci.html",
-                mesaj=mesaj
-            )
+        else:
 
-        if len(sifre) < 6:
+            conn = veritabani_baglan()
 
-            mesaj = "Şifre en az 6 karakter olmalıdır."
+            mevcut = conn.execute("""
+                SELECT id
+                FROM firin_basvurulari
+                WHERE kullanici_adi = ?
+            """, (kullanici_adi,)).fetchone()
 
-            return render_template(
-                "firinci.html",
-                mesaj=mesaj
-            )
+            if mevcut:
+                mesaj = "Bu kullanıcı adı zaten kullanılıyor."
 
-        sifre_hash = generate_password_hash(sifre)
+            else:
 
-        conn = sqlite3.connect(DATABASE)
+                sifre_hash = generate_password_hash(sifre)
 
-        cursor = conn.cursor()
-
-        try:
-
-            cursor.execute("""
-                INSERT INTO firin_basvurulari
-                (
+                conn.execute("""
+                    INSERT INTO firin_basvurulari
+                    (
+                        firin_adi,
+                        yetkili,
+                        telefon,
+                        adres,
+                        saatler,
+                        bolgeler,
+                        kullanici_adi,
+                        sifre,
+                        durum
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
                     firin_adi,
                     yetkili,
                     telefon,
@@ -563,36 +544,18 @@ def firinci():
                     saatler,
                     bolgeler,
                     kullanici_adi,
-                    sifre,
-                    durum
+                    sifre_hash,
+                    "Bekliyor"
+                ))
+
+                conn.commit()
+
+                mesaj = (
+                    "Başvurunuz alındı. "
+                    "Admin onayından sonra giriş yapabilirsiniz."
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                firin_adi,
-                yetkili,
-                telefon,
-                adres,
-                saatler,
-                bolgeler,
-                kullanici_adi,
-                sifre_hash,
-                "Bekliyor"
-            ))
 
-            conn.commit()
-
-            mesaj = (
-                "Fırın başvurunuz alındı! "
-                "Admin onayından sonra giriş yapabilirsiniz. 🥖"
-            )
-
-        except sqlite3.IntegrityError:
-
-            mesaj = (
-                "Bu kullanıcı adı zaten kullanılıyor."
-            )
-
-        conn.close()
+            conn.close()
 
     return render_template(
         "firinci.html",
@@ -600,73 +563,42 @@ def firinci():
     )
 
 
-# ==================================================
-# FIRINCI GİRİŞ
-# ==================================================
-
 @app.route("/firinci-giris", methods=["GET", "POST"])
 def firinci_giris():
 
-    if session.get("firin_id"):
-
-        return redirect(
-            "/firinci-panel"
-        )
-
-    hata = ""
+    hata = None
 
     if request.method == "POST":
 
         kullanici_adi = request.form.get(
-            "kullanici_adi",
-            ""
+            "kullanici_adi", ""
         ).strip()
 
         sifre = request.form.get(
-            "sifre",
-            ""
-        )
+            "sifre", ""
+        ).strip()
 
-        conn = sqlite3.connect(DATABASE)
+        conn = veritabani_baglan()
 
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.cursor()
-
-        cursor.execute("""
+        firin = conn.execute("""
             SELECT *
             FROM firin_basvurulari
             WHERE kullanici_adi = ?
             AND durum = 'Onaylandı'
-        """, (
-            kullanici_adi,
-        ))
-
-        firin = cursor.fetchone()
+        """, (kullanici_adi,)).fetchone()
 
         conn.close()
 
-        if firin and firin["sifre"]:
+        if firin and check_password_hash(
+            firin["sifre"],
+            sifre
+        ):
 
-            if check_password_hash(
-                firin["sifre"],
-                sifre
-            ):
+            session["firinci_id"] = firin["id"]
 
-                session["firin_id"] = firin["id"]
+            return redirect("/firinci-panel")
 
-                session["firin_adi"] = (
-                    firin["firin_adi"]
-                )
-
-                return redirect(
-                    "/firinci-panel"
-                )
-
-        hata = (
-            "Kullanıcı adı veya şifre yanlış "
-            "ya da hesabınız henüz onaylanmadı."
-        )
+        hata = "Kullanıcı adı veya şifre yanlış."
 
     return render_template(
         "firinci_giris.html",
@@ -674,123 +606,63 @@ def firinci_giris():
     )
 
 
-# ==================================================
-# FIRINCI PANELİ
-# ==================================================
-
 @app.route("/firinci-panel")
 def firinci_panel():
 
-    firin_id = session.get(
-        "firin_id"
-    )
+    firin_id = session.get("firinci_id")
 
     if not firin_id:
+        return redirect("/firinci-giris")
 
-        return redirect(
-            "/firinci-giris"
-        )
+    conn = veritabani_baglan()
 
-    conn = sqlite3.connect(DATABASE)
-
-    conn.row_factory = sqlite3.Row
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    firin = conn.execute("""
         SELECT *
         FROM firin_basvurulari
         WHERE id = ?
-    """, (
-        firin_id,
-    ))
+        AND durum = 'Onaylandı'
+    """, (firin_id,)).fetchone()
 
-    firin = cursor.fetchone()
+    siparisler = conn.execute("""
+        SELECT *
+        FROM siparisler
+        WHERE firin_id = ?
+        ORDER BY id DESC
+    """, (firin_id,)).fetchall()
 
     conn.close()
 
     if not firin:
-
-        session.pop("firin_id", None)
-        session.pop("firin_adi", None)
-
-        return redirect(
-            "/firinci-giris"
-        )
+        session.pop("firinci_id", None)
+        return redirect("/firinci-giris")
 
     return render_template(
         "firinci_panel.html",
-        firin=firin
+        firin=firin,
+        siparisler=siparisler
     )
 
-
-# ==================================================
-# FIRINCI ÇIKIŞ
-# ==================================================
 
 @app.route("/firinci-cikis")
 def firinci_cikis():
 
-    session.pop(
-        "firin_id",
-        None
-    )
+    session.pop("firinci_id", None)
 
-    session.pop(
-        "firin_adi",
-        None
-    )
-
-    return redirect(
-        "/firinci-giris"
-    )
-
-
-# ==================================================
-# KURYE BAŞVURUSU
-# ==================================================
-
-@app.route("/kurye", methods=["GET", "POST"])
+    return redirect("/firinci-giris")
+    @app.route("/kurye", methods=["GET", "POST"])
 def kurye():
 
-    mesaj = ""
+    mesaj = None
 
     if request.method == "POST":
 
-        ad_soyad = request.form.get(
-            "ad_soyad",
-            ""
-        ).strip()
-
-        telefon = request.form.get(
-            "telefon",
-            ""
-        ).strip()
-
-        yas = request.form.get(
-            "yas",
-            ""
-        ).strip()
-
-        ilce = request.form.get(
-            "ilce",
-            ""
-        ).strip()
-
-        arac = request.form.get(
-            "arac",
-            ""
-        ).strip()
-
-        kullanici_adi = request.form.get(
-            "kullanici_adi",
-            ""
-        ).strip()
-
-        sifre = request.form.get(
-            "sifre",
-            ""
-        )
+        ad_soyad = request.form.get("ad_soyad", "").strip()
+        telefon = request.form.get("telefon", "").strip()
+        yas = request.form.get("yas", "").strip()
+        ilce = request.form.get("ilce", "").strip()
+        arac = request.form.get("arac", "").strip()
+        kullanici_adi = request.form.get("kullanici_adi", "").strip()
+        sifre = request.form.get("sifre", "").strip()
 
         if not all([
             ad_soyad,
@@ -801,94 +673,58 @@ def kurye():
             kullanici_adi,
             sifre
         ]):
-
             mesaj = "Lütfen bütün alanları doldurun."
 
-            return render_template(
-                "kurye.html",
-                mesaj=mesaj
-            )
+        else:
 
-        try:
+            conn = veritabani_baglan()
 
-            yas_sayi = int(yas)
+            mevcut = conn.execute("""
+                SELECT id
+                FROM kurye_basvurulari
+                WHERE kullanici_adi = ?
+            """, (kullanici_adi,)).fetchone()
 
-            if yas_sayi < 18:
+            if mevcut:
 
-                mesaj = (
-                    "Kurye başvurusu için "
-                    "en az 18 yaşında olmalısınız."
-                )
+                mesaj = "Bu kullanıcı adı zaten kullanılıyor."
 
-                return render_template(
-                    "kurye.html",
-                    mesaj=mesaj
-                )
+            else:
 
-        except ValueError:
+                sifre_hash = generate_password_hash(sifre)
 
-            mesaj = "Geçerli bir yaş girin."
-
-            return render_template(
-                "kurye.html",
-                mesaj=mesaj
-            )
-
-        if len(sifre) < 6:
-
-            mesaj = "Şifre en az 6 karakter olmalıdır."
-
-            return render_template(
-                "kurye.html",
-                mesaj=mesaj
-            )
-
-        sifre_hash = generate_password_hash(sifre)
-
-        conn = sqlite3.connect(DATABASE)
-
-        cursor = conn.cursor()
-
-        try:
-
-            cursor.execute("""
-                INSERT INTO kurye_basvurulari
-                (
+                conn.execute("""
+                    INSERT INTO kurye_basvurulari
+                    (
+                        ad_soyad,
+                        telefon,
+                        yas,
+                        ilce,
+                        arac,
+                        kullanici_adi,
+                        sifre,
+                        durum
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
                     ad_soyad,
                     telefon,
                     yas,
                     ilce,
                     arac,
                     kullanici_adi,
-                    sifre,
-                    durum
+                    sifre_hash,
+                    "Bekliyor"
+                ))
+
+                conn.commit()
+
+                mesaj = (
+                    "Kurye başvurunuz alındı. "
+                    "Admin onayından sonra giriş yapabilirsiniz."
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                ad_soyad,
-                telefon,
-                yas,
-                ilce,
-                arac,
-                kullanici_adi,
-                sifre_hash,
-                "Bekliyor"
-            ))
 
-            conn.commit()
-
-            mesaj = (
-                "Kurye başvurunuz alındı! "
-                "Admin onayından sonra giriş yapabilirsiniz. 🛵"
-            )
-
-        except sqlite3.IntegrityError:
-
-            mesaj = (
-                "Bu kullanıcı adı zaten kullanılıyor."
-            )
-
-        conn.close()
+            conn.close()
 
     return render_template(
         "kurye.html",
@@ -896,73 +732,42 @@ def kurye():
     )
 
 
-# ==================================================
-# KURYE GİRİŞ
-# ==================================================
-
 @app.route("/kurye-giris", methods=["GET", "POST"])
 def kurye_giris():
 
-    if session.get("kurye_id"):
-
-        return redirect(
-            "/kurye-panel"
-        )
-
-    hata = ""
+    hata = None
 
     if request.method == "POST":
 
         kullanici_adi = request.form.get(
-            "kullanici_adi",
-            ""
+            "kullanici_adi", ""
         ).strip()
 
         sifre = request.form.get(
-            "sifre",
-            ""
-        )
+            "sifre", ""
+        ).strip()
 
-        conn = sqlite3.connect(DATABASE)
+        conn = veritabani_baglan()
 
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.cursor()
-
-        cursor.execute("""
+        kurye = conn.execute("""
             SELECT *
             FROM kurye_basvurulari
             WHERE kullanici_adi = ?
             AND durum = 'Onaylandı'
-        """, (
-            kullanici_adi,
-        ))
-
-        kurye = cursor.fetchone()
+        """, (kullanici_adi,)).fetchone()
 
         conn.close()
 
-        if kurye and kurye["sifre"]:
+        if kurye and check_password_hash(
+            kurye["sifre"],
+            sifre
+        ):
 
-            if check_password_hash(
-                kurye["sifre"],
-                sifre
-            ):
+            session["kurye_id"] = kurye["id"]
 
-                session["kurye_id"] = kurye["id"]
+            return redirect("/kurye-panel")
 
-                session["kurye_adi"] = (
-                    kurye["ad_soyad"]
-                )
-
-                return redirect(
-                    "/kurye-panel"
-                )
-
-        hata = (
-            "Kullanıcı adı veya şifre yanlış "
-            "ya da hesabınız henüz onaylanmadı."
-        )
+        hata = "Kullanıcı adı veya şifre yanlış."
 
     return render_template(
         "kurye_giris.html",
@@ -970,129 +775,109 @@ def kurye_giris():
     )
 
 
-# ==================================================
-# KURYE PANELİ
-# ==================================================
-
 @app.route("/kurye-panel")
 def kurye_panel():
 
-    kurye_id = session.get(
-        "kurye_id"
-    )
+    kurye_id = session.get("kurye_id")
 
     if not kurye_id:
+        return redirect("/kurye-giris")
 
-        return redirect(
-            "/kurye-giris"
-        )
+    conn = veritabani_baglan()
 
-    conn = sqlite3.connect(DATABASE)
-
-    conn.row_factory = sqlite3.Row
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    kurye = conn.execute("""
         SELECT *
-        FROM siparisler
-        WHERE kurye_id IS NULL
-        AND durum = 'Bekliyor'
-        ORDER BY id DESC
-    """)
+        FROM kurye_basvurulari
+        WHERE id = ?
+        AND durum = 'Onaylandı'
+    """, (kurye_id,)).fetchone()
 
-    bekleyen_siparisler = cursor.fetchall()
+    bekleyen_siparisler = conn.execute("""
+        SELECT
+            s.*,
+            f.firin_adi
+        FROM siparisler s
+        LEFT JOIN firin_basvurulari f
+            ON s.firin_id = f.id
+        WHERE s.kurye_id IS NULL
+        AND s.durum = 'Bekliyor'
+        ORDER BY s.id DESC
+    """).fetchall()
 
-    cursor.execute("""
-        SELECT *
-        FROM siparisler
-        WHERE kurye_id = ?
-        ORDER BY id DESC
-    """, (
-        kurye_id,
-    ))
-
-    benim_siparislerim = cursor.fetchall()
+    benim_siparislerim = conn.execute("""
+        SELECT
+            s.*,
+            f.firin_adi
+        FROM siparisler s
+        LEFT JOIN firin_basvurulari f
+            ON s.firin_id = f.id
+        WHERE s.kurye_id = ?
+        ORDER BY s.id DESC
+    """, (kurye_id,)).fetchall()
 
     conn.close()
 
+    if not kurye:
+        session.pop("kurye_id", None)
+        return redirect("/kurye-giris")
+
     return render_template(
         "kurye_panel.html",
-        kurye_adi=session.get(
-            "kurye_adi"
-        ),
+        kurye=kurye,
         bekleyen_siparisler=bekleyen_siparisler,
         benim_siparislerim=benim_siparislerim
     )
 
 
-# ==================================================
-# KURYE SİPARİŞ AL
-# ==================================================
+@app.route("/kurye/siparis-al/<int:siparis_id>", methods=["POST"])
+def siparis_al(siparis_id):
 
-@app.route(
-    "/kurye/siparis-al/<int:siparis_id>",
-    methods=["POST"]
-)
-def kurye_siparis_al(siparis_id):
-
-    kurye_id = session.get(
-        "kurye_id"
-    )
+    kurye_id = session.get("kurye_id")
 
     if not kurye_id:
+        return redirect("/kurye-giris")
 
-        return redirect(
-            "/kurye-giris"
-        )
+    conn = veritabani_baglan()
 
-    conn = sqlite3.connect(DATABASE)
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        UPDATE siparisler
-        SET kurye_id = ?,
-            durum = 'Kurye Aldı'
+    # Sipariş hâlâ boşta mı kontrol et
+    siparis = conn.execute("""
+        SELECT *
+        FROM siparisler
         WHERE id = ?
         AND kurye_id IS NULL
         AND durum = 'Bekliyor'
-    """, (
-        kurye_id,
-        siparis_id
-    ))
+    """, (siparis_id,)).fetchone()
 
-    conn.commit()
+    if siparis:
+
+        conn.execute("""
+            UPDATE siparisler
+            SET kurye_id = ?,
+                durum = 'Kurye Aldı'
+            WHERE id = ?
+            AND kurye_id IS NULL
+        """, (
+            kurye_id,
+            siparis_id
+        ))
+
+        conn.commit()
 
     conn.close()
 
-    return redirect(
-        "/kurye-panel"
-    )
+    return redirect("/kurye-panel")
 
-
-# ==================================================
-# KURYE SİPARİŞ DURUMU
-# ==================================================
 
 @app.route(
     "/kurye/siparis-durum/<int:siparis_id>/<durum>",
     methods=["POST"]
 )
-def kurye_siparis_durum(
-    siparis_id,
-    durum
-):
+def kurye_siparis_durum(siparis_id, durum):
 
-    kurye_id = session.get(
-        "kurye_id"
-    )
+    kurye_id = session.get("kurye_id")
 
     if not kurye_id:
-
-        return redirect(
-            "/kurye-giris"
-        )
+        return redirect("/kurye-giris")
 
     izinli_durumlar = [
         "Hazırlanıyor",
@@ -1101,14 +886,11 @@ def kurye_siparis_durum(
     ]
 
     if durum not in izinli_durumlar:
+        return redirect("/kurye-panel")
 
-        return "Geçersiz durum."
+    conn = veritabani_baglan()
 
-    conn = sqlite3.connect(DATABASE)
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    conn.execute("""
         UPDATE siparisler
         SET durum = ?
         WHERE id = ?
@@ -1120,76 +902,46 @@ def kurye_siparis_durum(
     ))
 
     conn.commit()
-
     conn.close()
 
-    return redirect(
-        "/kurye-panel"
-    )
+    return redirect("/kurye-panel")
 
-
-# ==================================================
-# KURYE ÇIKIŞ
-# ==================================================
 
 @app.route("/kurye-cikis")
 def kurye_cikis():
 
-    session.pop(
-        "kurye_id",
-        None
-    )
+    session.pop("kurye_id", None)
 
-    session.pop(
-        "kurye_adi",
-        None
-    )
-
-    return redirect(
-        "/kurye-giris"
-    )
+    return redirect("/kurye-giris")
 
 
-# ==================================================
-# ADMIN GİRİŞ
-# ==================================================
+# --------------------------------------------------
+# ADMIN
+# --------------------------------------------------
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
 
-    if session.get("admin_giris"):
-
-        return admin_paneli()
-
-    hata = ""
+    hata = None
 
     if request.method == "POST":
 
-        kullanici = request.form.get(
-            "kullanici",
-            ""
-        )
+        kullanici_adi = request.form.get(
+            "kullanici_adi", ""
+        ).strip()
 
         sifre = request.form.get(
-            "sifre",
-            ""
-        )
+            "sifre", ""
+        ).strip()
 
         if (
-            kullanici == ADMIN_KULLANICI
-            and
-            sifre == ADMIN_SIFRE
+            kullanici_adi == ADMIN_KULLANICI
+            and sifre == ADMIN_SIFRE
         ):
+            session["admin"] = True
+            return redirect("/admin-panel")
 
-            session["admin_giris"] = True
-
-            return redirect(
-                "/admin"
-            )
-
-        hata = (
-            "❌ Kullanıcı adı veya şifre yanlış!"
-        )
+        hata = "Admin kullanıcı adı veya şifre yanlış."
 
     return render_template(
         "admin_giris.html",
@@ -1197,215 +949,152 @@ def admin():
     )
 
 
-# ==================================================
-# ADMIN PANELİ
-# ==================================================
+@app.route("/admin-panel")
+def admin_panel():
 
-def admin_paneli():
+    if not session.get("admin"):
+        return redirect("/admin")
 
-    conn = sqlite3.connect(DATABASE)
+    conn = veritabani_baglan()
 
-    conn.row_factory = sqlite3.Row
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    firin_basvurulari = conn.execute("""
         SELECT *
         FROM firin_basvurulari
         ORDER BY id DESC
-    """)
+    """).fetchall()
 
-    firinlar = cursor.fetchall()
-
-    cursor.execute("""
+    kurye_basvurulari = conn.execute("""
         SELECT *
         FROM kurye_basvurulari
         ORDER BY id DESC
-    """)
+    """).fetchall()
 
-    kuryeler = cursor.fetchall()
-
-    cursor.execute("""
-        SELECT *
-        FROM siparisler
-        ORDER BY id DESC
-    """)
-
-    siparisler = cursor.fetchall()
+    siparisler = conn.execute("""
+        SELECT
+            s.*,
+            f.firin_adi
+        FROM siparisler s
+        LEFT JOIN firin_basvurulari f
+            ON s.firin_id = f.id
+        ORDER BY s.id DESC
+    """).fetchall()
 
     conn.close()
 
     return render_template(
         "admin.html",
-        basvurular=firinlar,
-        kuryeler=kuryeler,
+        firin_basvurulari=firin_basvurulari,
+        kurye_basvurulari=kurye_basvurulari,
         siparisler=siparisler
     )
 
 
-# ==================================================
-# ADMIN ÇIKIŞ
-# ==================================================
+@app.route("/admin/firin-onayla/<int:firin_id>", methods=["POST"])
+def firin_onayla(firin_id):
 
-@app.route("/admin/cikis")
-def admin_cikis():
+    if not session.get("admin"):
+        return redirect("/admin")
 
-    session.pop(
-        "admin_giris",
-        None
-    )
+    conn = veritabani_baglan()
 
-    return redirect(
-        "/admin"
-    )
-
-
-# ==================================================
-# FIRIN ONAY / RED
-# ==================================================
-
-@app.route(
-    "/admin/durum/<int:id>/<durum>"
-)
-def durum_degistir(
-    id,
-    durum
-):
-
-    if not session.get(
-        "admin_giris"
-    ):
-
-        return redirect(
-            "/admin"
-        )
-
-    if durum not in [
-        "Onaylandı",
-        "Reddedildi"
-    ]:
-
-        return "Geçersiz işlem"
-
-    conn = sqlite3.connect(DATABASE)
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    conn.execute("""
         UPDATE firin_basvurulari
-        SET durum = ?
+        SET durum = 'Onaylandı'
         WHERE id = ?
-    """, (
-        durum,
-        id
-    ))
+    """, (firin_id,))
 
     conn.commit()
-
     conn.close()
 
-    return redirect(
-        "/admin"
-    )
+    return redirect("/admin-panel")
 
 
-# ==================================================
-# ONAYLI FIRIN KALDIR
-# ==================================================
+@app.route("/admin/firin-reddet/<int:firin_id>", methods=["POST"])
+def firin_reddet(firin_id):
 
-@app.route(
-    "/admin/firin-kaldir/<int:id>",
-    methods=["POST"]
-)
-def firin_kaldir(id):
+    if not session.get("admin"):
+        return redirect("/admin")
 
-    if not session.get(
-        "admin_giris"
-    ):
+    conn = veritabani_baglan()
 
-        return redirect(
-            "/admin"
-        )
-
-    conn = sqlite3.connect(DATABASE)
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    conn.execute("""
         UPDATE firin_basvurulari
         SET durum = 'Reddedildi'
         WHERE id = ?
-        AND durum = 'Onaylandı'
-    """, (
-        id,
-    ))
+    """, (firin_id,))
 
     conn.commit()
-
     conn.close()
 
-    return redirect(
-        "/admin"
-    )
+    return redirect("/admin-panel")
 
 
-# ==================================================
-# KURYE ONAY / RED
-# ==================================================
+@app.route("/admin/firin-kaldir/<int:firin_id>", methods=["POST"])
+def firin_kaldir(firin_id):
 
-@app.route(
-    "/admin/kurye/<int:id>/<durum>"
-)
-def kurye_durum_degistir(
-    id,
-    durum
-):
+    if not session.get("admin"):
+        return redirect("/admin")
 
-    if not session.get(
-        "admin_giris"
-    ):
+    conn = veritabani_baglan()
 
-        return redirect(
-            "/admin"
-        )
-
-    if durum not in [
-        "Onaylandı",
-        "Reddedildi"
-    ]:
-
-        return "Geçersiz işlem"
-
-    conn = sqlite3.connect(DATABASE)
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        UPDATE kurye_basvurulari
-        SET durum = ?
+    conn.execute("""
+        DELETE FROM firin_basvurulari
         WHERE id = ?
-    """, (
-        durum,
-        id
-    ))
+    """, (firin_id,))
 
     conn.commit()
-
     conn.close()
 
-    return redirect(
-        "/admin"
-    )
+    return redirect("/admin-panel")
 
 
-# ==================================================
-# BAŞLAT
-# ==================================================
+@app.route("/admin/kurye-onayla/<int:kurye_id>", methods=["POST"])
+def kurye_onayla(kurye_id):
+
+    if not session.get("admin"):
+        return redirect("/admin")
+
+    conn = veritabani_baglan()
+
+    conn.execute("""
+        UPDATE kurye_basvurulari
+        SET durum = 'Onaylandı'
+        WHERE id = ?
+    """, (kurye_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin-panel")
+
+
+@app.route("/admin/kurye-reddet/<int:kurye_id>", methods=["POST"])
+def kurye_reddet(kurye_id):
+
+    if not session.get("admin"):
+        return redirect("/admin")
+
+    conn = veritabani_baglan()
+
+    conn.execute("""
+        UPDATE kurye_basvurulari
+        SET durum = 'Reddedildi'
+        WHERE id = ?
+    """, (kurye_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin-panel")
+
+
+@app.route("/admin-cikis")
+def admin_cikis():
+
+    session.pop("admin", None)
+
+    return redirect("/admin")
+
 
 if __name__ == "__main__":
-
-    veritabani_olustur()
-
-    app.run(
-        debug=True
-    )
+    app.run(debug=True)
