@@ -1,48 +1,90 @@
-<!DOCTYPE html><html lang="tr"><head>
-    <meta charset="UTF-8"><meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Girişi - UrfaEkmek</title>
 
-<title>Admin Girişi - UrfaEkmek</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-<link rel="stylesheet"
-      href="/static/style.css">
+        .kutu {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
 
-</head><body><header><h1>🔐 UrfaEkmek</h1>
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
-<p>Yönetici Girişi</p>
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-</header><main><section class="form-container">
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-    <h2>🔐 Admin Paneli</h2>
+        .hata {
+            background: #ffe5e5;
+            color: #b00020;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="kutu">
+
+    <h1>🔐 Admin Girişi</h1>
 
     {% if hata %}
-
-        <div class="success">
+        <div class="hata">
             {{ hata }}
         </div>
-
     {% endif %}
 
     <form method="POST">
 
-        <label for="kullanici">
-            👤 Kullanıcı Adı
-        </label>
-
         <input
-            id="kullanici"
             type="text"
-            name="kullanici"
+            name="kullanici_adi"
             placeholder="Kullanıcı adı"
             required
         >
 
-        <label for="sifre">
-            🔑 Şifre
-        </label>
-
         <input
-            id="sifre"
             type="password"
             name="sifre"
             placeholder="Şifre"
@@ -50,19 +92,12 @@
         >
 
         <button type="submit">
-            🔐 Giriş Yap
+            Giriş Yap
         </button>
 
     </form>
 
-    <div style="text-align:center; margin-top:25px;">
+</div>
 
-        <a href="/">
-            ← Ana Sayfaya Dön
-        </a>
-
-    </div>
-
-</section>
-
-</main></body></html>
+</body>
+</html>
