@@ -239,7 +239,7 @@ def sepete_ekle(firin_id, urun_id):
 
     return redirect("/firin/" + str(firin_id))
 @app.route("/sepet")
-def sepet():    
+def sepet():
 
     sepet = session.get("sepet", {})
 
@@ -249,9 +249,11 @@ def sepet():
     urunler = urunleri_getir()
 
     for urun in urunler:
+
         urun_id = str(urun["id"])
 
         if urun_id in sepet:
+
             adet = sepet[urun_id]
 
             ara_toplam = urun["fiyat"] * adet
@@ -289,8 +291,6 @@ def sepet():
         firin=firin,
         mesaj=mesaj
     )
-
-
 @app.route("/sepet/arttir/<int:urun_id>", methods=["POST"])
 def sepet_arttir(urun_id):
 
