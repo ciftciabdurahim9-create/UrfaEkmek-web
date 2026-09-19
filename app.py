@@ -238,7 +238,7 @@ def sepete_ekle(firin_id, urun_id):
     session.modified = True
 
     return redirect("/firin/" + str(firin_id))
-    @app.route("/sepet")
+@app.route("/sepet")
 def sepet():
 
     sepet = session.get("sepet", {})
