@@ -3,179 +3,230 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Sepet - UrfaEkmek</title>
 
-    <link rel="stylesheet"
-          href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
 <header>
-
     <h1>🥖 UrfaEkmek</h1>
-
     <p>🛒 Sepetim</p>
-
 </header>
-
 
 <main>
 
-    <section class="form-container">
+    {% if mesaj %}
 
-        <h2>🛒 Sepetim</h2>
+        <div class="form-container"
+             style="text-align:center; color:red;">
+
+            <h3>⚠️ {{ mesaj }}</h3>
+
+        </div>
+
+    {% endif %}
 
 
-        {% if sepet %}
+    {% if firin %}
 
-            {% for id, urun in sepet.items() %}
+        <section class="form-container">
 
-                <div class="card"
-                     style="width:100%; margin-bottom:20px;">
+            <h2>🏪 {{ firin["firin_adi"] }}</h2>
 
-                    <h2>
-                        {{ urun["emoji"] }}
-                        {{ urun["ad"] }}
-                    </h2>
+            <p>
+                📍 {{ firin["adres"] }}
+            </p>
 
-                    <p>
-                        Birim fiyat:
-                        <strong>
-                            {{ urun["fiyat"] }} TL
-                        </strong>
-                    </p>
+            <p>
+                🕐 {{ firin["saatler"] }}
+            </p>
 
-                    <div style="margin:15px;">
+        </section>
 
-                        <form method="POST"
-                              action="/sepet/azalt/{{ id }}"
-                              style="display:inline;">
+    {% endif %}
+
+
+    {% if sepet %}
+
+        <section>
+
+            <h2 style="text-align:center;">
+                🛒 Sepetiniz
+            </h2>
+
+            <div class="cards">
+
+                {% for urun in sepet %}
+
+                    <div class="card">
+
+                        <h2>
+                            {{ urun["emoji"] }}
+                            {{ urun["ad"] }}
+                        </h2>
+
+                        <p>
+                            Birim fiyat:
+                            <strong>
+                                {{ urun["fiyat"] }} TL
+                            </strong>
+                        </p>
+
+                        <p>
+                            Ara toplam:
+                            <strong>
+                                {{ urun["ara_toplam"] }} TL
+                            </strong>
+                        </p>
+
+
+                        <div style="display:flex;
+                                    justify-content:center;
+                                    align-items:center;
+                                    gap:10px;
+                                    margin:15px 0;">
+
+                            <form
+                                method="POST"
+                                action="/sepet/azalt/{{ urun['id'] }}"
+                            >
+
+                                <button type="submit">
+                                    ➖
+                                </button>
+
+                            </form>
+
+
+                            <strong style="font-size:20px;">
+                                {{ urun["adet"] }}
+                            </strong>
+
+
+                            <form
+                                method="POST"
+                                action="/sepet/arttir/{{ urun['id'] }}"
+                            >
+
+                                <button type="submit">
+                                    ➕
+                                </button>
+
+                            </form>
+
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="/sepet/sil/{{ urun['id'] }}"
+                        >
 
                             <button type="submit">
-                                ➖
-                            </button>
-
-                        </form>
-
-
-                        <strong style="font-size:20px; margin:0 15px;">
-                            {{ urun["adet"] }}
-                        </strong>
-
-
-                        <form method="POST"
-                              action="/sepet/arttir/{{ id }}"
-                              style="display:inline;">
-
-                            <button type="submit">
-                                ➕
+                                🗑️ Ürünü Sil
                             </button>
 
                         </form>
 
                     </div>
 
-
-                    <p>
-                        Ürün toplamı:
-
-                        <strong>
-                            {{ urun["fiyat"] * urun["adet"] }} TL
-                        </strong>
-                    </p>
-
-
-                    <form method="POST"
-                          action="/sepet/sil/{{ id }}">
-
-                        <button type="submit">
-                            🗑️ Ürünü Sil
-                        </button>
-
-                    </form>
-
-                </div>
-
-            {% endfor %}
-
-
-            <hr>
-
-
-            <div style="text-align:right; margin-top:25px;">
-
-                <p>
-                    🥖 Ürünler:
-                    <strong>
-                        {{ toplam }} TL
-                    </strong>
-                </p>
-
-                <p>
-                    🛵 Kurye:
-                    <strong>
-                        {{ kurye_ucreti }} TL
-                    </strong>
-                </p>
-
-                <h2>
-                    💰 Toplam:
-                    {{ genel_toplam }} TL
-                </h2>
+                {% endfor %}
 
             </div>
 
+        </section>
 
-            <!-- SİPARİŞ VER BUTONU -->
+
+        <section class="form-container">
+
+            <h2>💰 Sipariş Özeti</h2>
+
+            <p>
+                🥖 Ürün Toplamı:
+                <strong>{{ toplam }} TL</strong>
+            </p>
+
+            <p>
+                🚚 Kurye Ücreti:
+                <strong>{{ kurye_ucreti }} TL</strong>
+            </p>
+
+            <hr>
+
+            <h2>
+                💵 Genel Toplam:
+                {{ genel_toplam }} TL
+            </h2>
+
+
             <div style="text-align:center; margin-top:25px;">
 
                 <a href="/siparis-ver">
-                    <button type="button">
-                        📦 Sipariş Ver
+
+                    <button>
+                        ✅ Sipariş Ver
                     </button>
+
                 </a>
 
             </div>
 
 
-            <!-- SEPETİ TEMİZLE -->
-            <form method="POST"
-                  action="/sepet/temizle"
-                  style="margin-top:20px;">
+            <div style="text-align:center; margin-top:15px;">
 
-                <button type="submit">
-                    🗑️ Sepeti Temizle
-                </button>
+                <form
+                    method="POST"
+                    action="/sepet/temizle"
+                >
 
-            </form>
+                    <button type="submit">
+                        🗑️ Sepeti Temizle
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
 
 
-        {% else %}
+    {% else %}
 
-            <p style="text-align:center;">
-                🛒 Sepetiniz boş.
+        <section
+            class="form-container"
+            style="text-align:center;"
+        >
+
+            <h2>🛒 Sepetiniz Boş</h2>
+
+            <p>
+                Henüz sepetinize ürün eklemediniz.
             </p>
 
-        {% endif %}
-
-
-        <div style="text-align:center; margin-top:30px;">
-
             <a href="/">
-                ← Ana Sayfaya Dön
+                <button>
+                    🏪 Fırınlara Git
+                </button>
             </a>
 
-        </div>
+        </section>
 
-    </section>
+    {% endif %}
+
+
+    <div style="text-align:center; margin:30px;">
+
+        <a href="/">
+            ← Fırınlara Dön
+        </a>
+
+    </div>
 
 </main>
 
 </body>
-
 </html>
