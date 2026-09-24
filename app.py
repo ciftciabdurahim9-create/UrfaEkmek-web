@@ -910,7 +910,31 @@ def firinci_panel():
         firin=firin,
         siparisler=siparisler
     )
+@app.route("/firinci/siparis-onayla/<int:siparis_id>")
+def firinci_siparis_onayla(siparis_id):
 
+    firin_id = session.get("firinci_id")
+
+    if not firin_id:
+        return redirect("/firinci-giris")
+
+    conn = veritabani_baglan()
+
+    conn.execute("""
+        UPDATE siparisler
+        SET durum = 'Kurye Bekleniyor'
+        WHERE id = ?
+        AND firin_id = ?
+        AND durum = 'Bekliyor'
+    """, (
+        siparis_id,
+        firin_id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/firinci-panel")
 
 # ==================================================
 # FIRIN ÇIKIŞ
