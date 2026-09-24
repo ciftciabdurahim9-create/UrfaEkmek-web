@@ -105,8 +105,6 @@
 
 <main>
 
-    <!-- KURYE BİLGİLERİ -->
-
     <div class="bilgi">
 
         <h2>👤 Hoş geldin, {{ kurye["ad_soyad"] }}</h2>
@@ -133,9 +131,7 @@
     </div>
 
 
-    <!-- BEKLEYEN SİPARİŞLER -->
-
-    <h2>📦 Bekleyen Siparişler</h2>
+    <h2>📦 Kurye Bekleyen Siparişler</h2>
 
     {% if bekleyen_siparisler %}
 
@@ -180,7 +176,7 @@
             <p>
                 📊 Durum:
                 <span class="durum">
-                    {{ siparis["durum"] }}
+                    🟡 {{ siparis["durum"] }}
                 </span>
             </p>
 
@@ -200,8 +196,13 @@
     {% else %}
 
         <div class="bos">
-            <h2>📭 Bekleyen sipariş yok</h2>
-            <p>Yeni siparişler geldiğinde burada görünecek.</p>
+
+            <h2>📭 Kurye bekleyen sipariş yok</h2>
+
+            <p>
+                Fırıncı bir siparişi onayladığında burada görünecek.
+            </p>
+
         </div>
 
     {% endif %}
@@ -209,8 +210,6 @@
 
     <hr>
 
-
-    <!-- KURYENİN ALDIĞI SİPARİŞLER -->
 
     <h2>🛵 Aldığım Siparişler</h2>
 
@@ -312,8 +311,13 @@
     {% else %}
 
         <div class="bos">
+
             <h2>📭 Henüz sipariş almadınız</h2>
-            <p>Bekleyen siparişlerden birini alabilirsiniz.</p>
+
+            <p>
+                Kurye bekleyen siparişlerden birini alabilirsiniz.
+            </p>
+
         </div>
 
     {% endif %}
