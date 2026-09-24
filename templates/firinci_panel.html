@@ -54,6 +54,21 @@
             font-weight: bold;
         }
 
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
         .cikis {
             display: inline-block;
             background: #c0392b;
@@ -84,6 +99,7 @@
 <main>
 
     <div class="bilgi">
+
         <h2>🏪 {{ firin["firin_adi"] }}</h2>
 
         <p>
@@ -114,10 +130,12 @@
         <a class="cikis" href="/firinci-cikis">
             🚪 Çıkış Yap
         </a>
+
     </div>
 
 
     <h2>📦 Gelen Siparişler</h2>
+
 
     {% if siparisler %}
 
@@ -166,31 +184,58 @@
 
             <p>
                 📊 Sipariş Durumu:
+
                 <span class="durum">
                     {{ siparis["durum"] }}
                 </span>
             </p>
 
+
+            {% if siparis["durum"] == "Bekliyor" %}
+
+                <a href="/firinci/siparis-onayla/{{ siparis['id'] }}">
+
+                    <button>
+                        ✅ Siparişi Onayla
+                    </button>
+
+                </a>
+
+            {% endif %}
+
+
             {% if siparis["kurye_id"] %}
+
                 <p>
                     🛵 Kurye:
-                    <strong>Kurye #{{ siparis["kurye_id"] }}</strong>
+                    <strong>
+                        Kurye #{{ siparis["kurye_id"] }}
+                    </strong>
                 </p>
+
             {% else %}
+
                 <p>
                     ⏳ Henüz kurye siparişi almadı.
                 </p>
+
             {% endif %}
 
         </div>
 
         {% endfor %}
 
+
     {% else %}
 
         <div class="bos">
+
             <h2>📭 Henüz sipariş yok</h2>
-            <p>Yeni siparişler burada görünecek.</p>
+
+            <p>
+                Yeni siparişler burada görünecek.
+            </p>
+
         </div>
 
     {% endif %}
