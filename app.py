@@ -1173,7 +1173,7 @@ def kurye_panel():
         LEFT JOIN firin_basvurulari f
             ON s.firin_id = f.id
         WHERE s.kurye_id IS NULL
-        AND s.durum = 'Bekliyor'
+        AND s.durum = 'Kurye Bekleniyor'
         ORDER BY s.id DESC
     """).fetchall()
 
