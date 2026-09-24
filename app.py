@@ -1237,7 +1237,7 @@ def siparis_al(siparis_id):
         FROM siparisler
         WHERE id = ?
         AND kurye_id IS NULL
-        AND durum = 'Bekliyor'
+        AND durum = 'Kurye Bekleniyor'
     """, (
         siparis_id,
     )).fetchone()
@@ -1250,6 +1250,7 @@ def siparis_al(siparis_id):
                 durum = 'Kurye Aldı'
             WHERE id = ?
             AND kurye_id IS NULL
+            AND durum = 'Kurye Bekleniyor'
         """, (
             kurye_id,
             siparis_id
